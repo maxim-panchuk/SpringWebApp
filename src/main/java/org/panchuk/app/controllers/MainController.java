@@ -1,5 +1,7 @@
 package org.panchuk.app.controllers;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.panchuk.app.entity.AccessToken;
 import org.panchuk.app.entity.Audit;
 import org.panchuk.app.entity.User;
@@ -20,6 +22,8 @@ import java.util.Optional;
 @Controller
 @RequestMapping()
 public class MainController {
+
+    private static final Logger logger = LogManager.getLogger(MainController.class);
 
     private final UserServiceImpl userServiceImpl;
     private final AuditServiceImpl auditService;
@@ -46,6 +50,7 @@ public class MainController {
         auditService.addAction(audit);
         AccessToken accessToken = getAccessToken(audit, ExpireTime.REGISTRATION_TIME.get());
         accessTokenService.addAccessToken(accessToken);
+        logger.info("User signed up");
         return "/home";
     }
 
@@ -53,8 +58,10 @@ public class MainController {
     public String signIn(@ModelAttribute("user") User user, Model model) {
         SignInHandler signInHandler = new SignInHandler(user, userServiceImpl);
         AccessToken accessToken;
-        if (!signInHandler.existMail())
+        if (!signInHandler.existMail()) {
+            logger.warn("Email doesn't exist, sign in failed");
             return "sign_in_failed";
+        }
         user = userServiceImpl.findByMail(user.getMail());
         Audit audit = getAction(user, ActionType.LOGIN_FAIL.get());
         if (signInHandler.signIn()) {
@@ -63,11 +70,13 @@ public class MainController {
             auditService.addAction(audit);
             accessToken = getAccessToken(audit, ExpireTime.LOGIN_PASS_TIME.get());
             accessTokenService.addAccessToken(accessToken);
+            logger.info("User signed in successfully");
             return "/account";
         }
         auditService.addAction(audit);
         accessToken = getAccessToken(audit, ExpireTime.LOGIN_FAIL_TIME.get());
         accessTokenService.addAccessToken(accessToken);
+        logger.warn("Email and password doesn't match");
         return "/sign_in_failed";
     }
 
@@ -82,8 +91,10 @@ public class MainController {
             AccessToken accessToken = getAccessToken(audit, ExpireTime.CHECK_MAIL_TIME.get());
             accessTokenService.addAccessToken(accessToken);
             model.addAttribute("user", user);
+            logger.info("Confirmed successfully");
             return "/account";
         }
+        logger.warn("Confirmation failed");
         return "/sign_in_failed";
     }
 
@@ -99,6 +110,7 @@ public class MainController {
         AccessToken accessToken = getAccessToken(audit, ExpireTime.LOGOUT_TIME.get());
         accessTokenService.addAccessToken(accessToken);
         model.addAttribute("user", user);
+        logger.info("Logged out successfully");
         return "/home";
     }
 
