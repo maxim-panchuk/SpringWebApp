@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Account</title>
+</head>
+<body>
+    <h3>Аккаунт</h3>
+    <br/>
+    <p th:text = "${user.getName()}">VALUE</p>
+    <br/>
+    <p th:text = "${user.getMail}">VALUE</p>
+    <br/>
+    <form th:method="GET" th:action = "@{/log_out}">
+        <input type="submit" value="Log out">
+    </form>
+    <br/>
+
+    <a th:href="@{/confirm/{id}(id=${user.getId()})}">Confirm</a>
+    <br/>
+    <a th:href="@{/log_out/{id}(id=${user.getId()})}">Log out</a>
+
+</body>
+</html>
